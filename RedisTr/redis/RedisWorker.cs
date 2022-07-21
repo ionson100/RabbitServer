@@ -2,7 +2,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using RedisTr.Controllers;
 using RedisTr.models;
+using RedisTr.utils;
 using StackExchange.Redis;
 
 namespace RedisTr.redis
@@ -22,38 +24,37 @@ namespace RedisTr.redis
             _mDataOut = mDataOut;
             _rabBody = rabBody;
         }
-        public async Task Run()
+        public async Task Run(TaskWrapper wrapper)
         {
-            long runner = 0;
             ISubscriber sub = _redisConnectionE.GConnectionMultiplexer().GetSubscriber();
+            WrapperMessage m = new WrapperMessage { Data = _rabBody, Key = utils.Utils.RandomString(12) };
+            try
+            {
+                await sub.SubscribeAsync($"{Utils.ChanelName(_mDataIn)}:{m.Key}", (channel, message) =>
+                {
+                    sub.UnsubscribeAsync(channel);
+                    _mDataOut.SetErrorData(ErrorCode.PrintError, message);
+                    _mDataOut.InnerRunner.IsError = false;
+                  
+                    wrapper.Task.Start();
 
-            WrapperMessage m=new WrapperMessage();
-            m.Data = _rabBody;
-            m.Key = utils.Utils.RandomString(12);
-             await sub.SubscribeAsync($"canel:{100}:{1}:{m.Key}", (channel, message) =>
-             {
-                  sub.UnsubscribeAsync(channel.ToString());
-                 _mDataOut.SetErrorData(ErrorCode.PrintError, message);
-                 _mDataOut.InnerRunner.IsError = false;
-                 Interlocked.Increment(ref runner);
+                });
+                wrapper.Action = () => { sub.UnsubscribeAsync(Utils.ChanelName(_mDataIn)); };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                wrapper.Exception = e;
+            }
+            finally
+            {
+                if (wrapper.Exception == null)
+                { 
+                    await sub.PublishAsync(Utils.ChanelName(_mDataIn), JsonConvert.SerializeObject(m));
+                }
+            }
+            
 
-             });
-             await sub.PublishAsync($"canel:{_mDataIn.HotelId}:{_mDataIn.PosId}",JsonConvert.SerializeObject(m));
-
-             var i = 0;
-
-                 while (Interlocked.Read(ref runner)==0)
-                 {
-                     i++;
-                     await Task.Delay(100);
-                     if (i > 6)
-                     {
-                         var err = "Истек срок ожидания ответа от клиента";
-                         _mDataOut.InnerRunner.IsError = true;
-                         _mDataOut.InnerRunner.ErrorText =err;
-                         break;
-                     }
-                 }
         }
     }
 

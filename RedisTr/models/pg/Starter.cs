@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using ORM_1_21_;
+using RedisTr.utils;
 
 namespace RedisTr.models.pg
 {
@@ -10,7 +11,7 @@ namespace RedisTr.models.pg
        public static void Start()
         {
             // todo Не решил как хранить секреты, на время тестов оставлю 
-            new Configure($"Server={MyHost};Port=5432;Database=hotel;" +
+            new Configure($"Server={Auth.Host};Port=5432;Database=hotel;" +
                           $"User Id = {MPgSecret2.Secret.PgName}; " +
                           $"Password={MPgSecret2.Secret.PgPwd};",
                 ProviderName.Postgresql, null);

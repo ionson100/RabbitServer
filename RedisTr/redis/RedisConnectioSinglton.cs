@@ -1,28 +1,25 @@
 ﻿using System.Threading.Tasks;
+using RedisTr.utils;
 using StackExchange.Redis;
 
 namespace RedisTr.redis
 {
-    public class RedisConnectioSinglton: IRedisConnectionE
+    public class RedisConnectionSinglton: IRedisConnectionE
     {
         private readonly ConnectionMultiplexer _connectionMultiplexer;
         private readonly IServer _server=null;
-        public RedisConnectioSinglton()
+
+        public RedisConnectionSinglton()
         {
             Task<ConnectionMultiplexer> redis = ConnectionMultiplexer.ConnectAsync(
-                new ConfigurationOptions//host.docker.internal
+                new ConfigurationOptions //host.docker.internal
                 {
-#if DEBUG
-
-#else
-Password = "",
-#endif
-                    EndPoints = { "host.docker.internal:6379" },
-                    
+                    Password = Auth.Pwd,
+                    EndPoints = {$"{Auth.Host}:6379"},
                     AbortOnConnectFail = false,
                 });
             _connectionMultiplexer = redis.Result;
-            _server= _connectionMultiplexer.GetServer("host.docker.internal:6379");
+            _server = _connectionMultiplexer.GetServer($"{Auth.Host}:6379");
         }
 
         public ConnectionMultiplexer GConnectionMultiplexer()

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Models;
+using RedisTr.models.pg;
 using RedisTr.redis;
 
 namespace RedisTr
@@ -33,7 +34,7 @@ namespace RedisTr
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "RedisTr", Version = "v1" });
             });
-            services.AddSingleton<IRedisConnectionE, RedisConnectioSinglton>();
+            services.AddSingleton<IRedisConnectionE, RedisConnectionSinglton>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -61,6 +62,7 @@ namespace RedisTr
             {
                 endpoints.MapControllers();
             });
+            Starter.Start();
         }
     }
 }

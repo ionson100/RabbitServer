@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using RedisTr.models;
 
 namespace RedisTr.utils
 {
@@ -19,6 +17,16 @@ namespace RedisTr.utils
             }
 
             return  new String(stringChars);
+        }
+
+        public static string ErrorPostfix(MDataIn mDataIn)
+        {
+            return $"(hotel:{mDataIn.HotelId} PosId:{mDataIn.PosId})";
+        }
+
+        public static string ChanelName(MDataIn mDataIn)
+        {
+            return $"canel:{mDataIn.HotelId}:{mDataIn.PosId}";
         }
     }
 }
