@@ -15,6 +15,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RedisRPC\RedisRPC.csproj" />
+  </ItemGroup>
+
+  
+
+
+
+
+
+  <ItemGroup>
+   
     <Reference Include="NLog">
       <HintPath>NLog.dll</HintPath>
     </Reference>

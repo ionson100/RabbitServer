@@ -1,45 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 
 namespace RedisRPC
 {
-    class InnerWorker<TIn,TOut>
+    class InnerCallWorker
     {
         private readonly ISubscriber _subscriber;
         private readonly RedisChannel _channel;
         private readonly CommandFlags _flags;
 
 
-        public InnerWorker(ISubscriber subscriber, RedisChannel channel, CommandFlags flags)
+        public InnerCallWorker(ISubscriber subscriber, RedisChannel channel, CommandFlags flags)
         {
             _subscriber = subscriber;
             _channel = channel;
             _flags = flags;
         }
 
-        public async Task<TOut> Call<T>(T param,int timeOut)
+        public async Task<string> Call(string param,int timeOut)
         {
             TaskWrapper wrapper = new TaskWrapper {Task = new Task(() => { })};
-            var t = InnerCall(param, wrapper);
+          
             IConnectionMultiplexer mp = _subscriber.Multiplexer;
-
-            var server =mp.GetServer(mp.GetEndPoints()[0], new object());
-            var b = await server.SubscriptionSubscriberCountAsync(_channel);
-           //if (b == 0)
-           //{
-           //    throw new Exception("Исполнитель запроса не подключен");
-           //}
-           //
-           //if (b > 1)
-           //{
-           //    throw new Exception($"Подключено несколько исполнителей запроса, не заню какой выбрать ({b})");
-           //}
 
             var ee = InnerCall(param, wrapper);
             ee.Wait();
@@ -52,21 +36,21 @@ namespace RedisRPC
             {
                 if (wrapper.Task.Wait(timeOut))
                 {
-                    var tt = wrapper.ResultRedisValue.ToString();
-                    return JsonConvert.DeserializeObject<TOut>(tt);
+                    var tt = wrapper.ResultRedisValue;
+                    return tt;
                 }
                 else
                 {
                     wrapper.Action?.Invoke();
-                   throw new Exception("Превышен лимит времени ожидания ответа от принтера");
+                   throw new InnerExceptionRpc("Превышен лимит времени ожидания ответа от принтера");
                 }
             }
 
         }
 
-        private async Task InnerCall<T>( T param,TaskWrapper wrapper)
+        private async Task InnerCall( string param,TaskWrapper wrapper)
         {
-            WrapperMessage<T> m = new WrapperMessage<T>(param, Utils.RandomString(12));
+            WrapperMessage m = new WrapperMessage(param, Utils.RandomString(12));
             try
             {
                 await _subscriber.SubscribeAsync($"{_channel}:{m.Key}", (channel, message) =>
@@ -87,18 +71,18 @@ namespace RedisRPC
             {
                 if (wrapper.Exception == null)
                 {
-                    await _subscriber.PublishAsync(_channel, JsonConvert.SerializeObject(m));
+                    await _subscriber.PublishAsync(_channel, JsonConvert.SerializeObject(m,Formatting.None));
                 }
             }
         }
     }
 
-    public class  WrapperMessage<TIn>
+    public class  WrapperMessage
     {
-        public readonly TIn Param;
+        public readonly string Param;
         public readonly string Key;
 
-        public WrapperMessage(TIn param, string key)
+        public WrapperMessage(string param, string key)
         {
             Param = param;
             Key = key;

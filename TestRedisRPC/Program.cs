@@ -20,11 +20,37 @@ namespace TestRedisRPC
                     AbortOnConnectFail = false,
                 });
             var con=  redis.Result;
-            var connectionCounters = con.GetCounters().Subscription;
             ISubscriber sub = con.GetSubscriber();
-           var res= await sub.CallerRcpExtAsync<string,string>("asas", "asas");
-           int dd = 1;
+            try
+            {
+                await sub.PerformerRpcAsync("chanel:100:23", (channel, value) =>
+                {
+                    return MyMethod(value);
+                });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            
+            try
+            {  Console.WriteLine("Запрос на исполнение: Message");
+                var res= await sub.CallerRcpExtAsync("chanel:100:23", "Message",1000);
+                Console.WriteLine($"Ответ получен:{res}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
 
+            Console.Read();
+
+        }
+
+        static string MyMethod(string message)
+        {
+            return $"{message}-OK";
         }
     }
 }
