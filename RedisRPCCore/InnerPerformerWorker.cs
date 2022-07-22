@@ -17,7 +17,7 @@ namespace RedisRPC
                 {
                     string sd = message.ToString();
                     Dictionary<string,string> m = JsonConvert.DeserializeObject<Dictionary<string, string>>(message);
-                    string  res=  handler.Invoke(channel,m["patam"]);
+                    string  res=  handler.Invoke(channel,m["param"]);
                     await subscriber.PublishAsync($"{channel}:{m["key"]}", res);
                 }
                 catch (Exception e)

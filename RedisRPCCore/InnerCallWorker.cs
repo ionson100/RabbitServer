@@ -54,8 +54,9 @@ namespace RedisRPC
             string key = Utils.RandomString(12);
             Dictionary<string, string> dictionary = new Dictionary<string, string>
             {
-                {"key", key}, {"param", param}
+                {"param", param}, {"key", key}
             };
+
             try
             {
                 await _subscriber.SubscribeAsync($"{_channel}:{key}", (channel, message) =>
@@ -64,7 +65,7 @@ namespace RedisRPC
                     wrapper.ResultRedisValue = message;
                     wrapper.Task.Start();
 
-                });
+                },_flags);
                 wrapper.Action = () => { _subscriber.UnsubscribeAsync(_channel); };
             }
             catch (Exception e)
@@ -76,13 +77,13 @@ namespace RedisRPC
             {
                 if (wrapper.Exception == null)
                 {
-                    await _subscriber.PublishAsync(_channel, JsonConvert.SerializeObject(dictionary,Formatting.None));
+                    await _subscriber.PublishAsync(_channel, JsonConvert.SerializeObject(dictionary,Formatting.None),_flags);
                 }
             }
         }
     }
 
-    
+   
     public class TaskWrapper
     {
         public Task Task { get; set; } = new Task(() => { });

@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <PackageId>RedisTr2</PackageId>
+    <Product>RedisTr2</Product>
+    <Company>RedisTr2</Company>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RedisRPC\RedisRPC.csproj" />
+    <ProjectReference Include="..\RedisRPCCore\RedisRPCCore.csproj" />
   </ItemGroup>
 
   
